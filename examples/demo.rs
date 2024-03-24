@@ -1,9 +1,7 @@
 use kuma_rs as kuma;
-
-
 use std::env;
 use dotenv::dotenv;
-use kuma::api::{HouseState, Kuma};
+use kuma::{HouseState, Kuma};
 
 #[tokio::main]
 async fn main() {
