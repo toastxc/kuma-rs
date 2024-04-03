@@ -1,10 +1,9 @@
 use dotenv::dotenv;
 use eframe::{Frame, HardwareAcceleration, Renderer, Storage};
 use egui::{Context, FontId, RichText, TextEdit, Ui, Widget};
+use egui_notify::Toasts;
 use kuma_rs::{DataHouse, HouseState, Kuma};
 use material_egui::MaterialColors;
-
-use egui_notify::Toasts;
 use notify_rust::get_server_information;
 use std::{
     sync::{Arc, RwLock},
@@ -26,7 +25,7 @@ fn main() {
             .with_transparent(true),
         vsync: false,
         hardware_acceleration: HardwareAcceleration::Required,
-         renderer: Renderer::Glow,
+        renderer: Renderer::Glow,
         follow_system_theme: true,
         centered: false,
 
@@ -49,7 +48,7 @@ struct App {
     pub page: bool,
     pub past_state: HouseState,
     pub page_switchable: bool,
-    pub toasts: Toasts,
+    pub toasts: Arc<RwLock<Toasts>>,
 }
 
 impl Default for App {
@@ -63,7 +62,7 @@ impl Default for App {
             past_state: HouseState::Online,
             page: false,
             page_switchable: true,
-            toasts: Toasts::new(),
+            toasts: Arc::new(RwLock::new(Toasts::new())),
         }
     }
 }
@@ -74,19 +73,24 @@ impl App {
         let engine = self.api.clone();
         let data = self.data.clone();
         let swap = self.page_switchable;
+        let toasts = self.toasts.clone();
 
         runtime.spawn(async move {
             loop {
                 context.request_repaint();
                 if swap {
+                    let uptime = engine.get().await;
                     match engine.get().await {
-                        Ok(uptime) => {
-                            *data.write().unwrap() = Some(uptime);
-                        }
+                        Ok(_) => {}
                         Err(error) => {
+                            toasts
+                                .write()
+                                .unwrap()
+                                .error(format!("{}", error.root_cause()));
                             println!("{:?}", error);
                         }
-                    }
+                    };
+                    *data.write().unwrap() = uptime.ok();
                 }
                 tokio::time::sleep(Duration::from_secs(10)).await;
             }
@@ -124,9 +128,9 @@ impl eframe::App for App {
 }
 
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
-    value.toasts.show(ctx);
+    value.toasts.write().unwrap().show(ctx);
     ui.add_enabled_ui(value.page_switchable, |ui| {
-        let str = match value.page.clone() {
+        let str = match value.page {
             false => "Login",
             true => "Logout",
         };
@@ -158,10 +162,8 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
             if value.api.url.is_empty() {
                 error_message = Some("URL is empty");
             }
-        } else if res_auth.unwrap().contains_pointer() {
-            if value.api.auth.is_empty() {
-                error_message = Some("Token is empty");
-            }
+        } else if res_auth.unwrap().contains_pointer() && value.api.auth.is_empty() {
+            error_message = Some("Token is empty");
         }
 
         if let Some(msg) = error_message {
@@ -178,6 +180,8 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
         if let Err(error) = get_server_information() {
             value
                 .toasts
+                .write()
+                .unwrap()
                 .warning("DBus error")
                 .set_duration(Duration::from_secs(5).into());
             println!("{:?}", error);
@@ -195,10 +199,7 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
         }
     };
 
-    ui.label(
-        RichText::new(format!("Status: {}", data.state.to_string()))
-            .font(FontId::proportional(40.)),
-    );
+    ui.label(RichText::new(format!("Status: {}", data.state)).font(FontId::proportional(40.)));
     ui.label(match data.state {
         HouseState::Offline => {
             "Yikes! not a single service can be reached (besides the uptime server)".to_string()
@@ -218,7 +219,7 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
         for (name, service) in services {
             ui.collapsing(name, |ui| {
                 ui.label(format!("Type: {}", service.monitor_type.to_string()));
-                ui.label(format!("URL: {}", service.monitor_url.to_string()));
+                ui.label(format!("URL: {}", service.monitor_url));
             });
         }
     }

@@ -143,17 +143,15 @@ impl Display for HouseState {
             HouseState::Degraded(_) => "Degraded",
             Online => "Online",
         }
-            .to_string();
+        .to_string();
         write!(f, "{}", str)
     }
 }
 impl HouseState {
     pub fn is_degraded(&self) -> Option<usize> {
         match self {
-            HouseState::Offline |
-            HouseState::Online => None,
+            HouseState::Offline | HouseState::Online => None,
             HouseState::Degraded(a) => Some(*a),
-
         }
     }
 }
