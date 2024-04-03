@@ -33,6 +33,8 @@ async fn main() {
 <img src="https://github.com/toastxc/kuma-rs/blob/main/README_RESOURCES/img1.png" alt="Demo image 1" width="30%" height="30%">
 <img src="https://github.com/toastxc/kuma-rs/blob/main/README_RESOURCES/img2.png" alt="Demo image 2" width="30%" height="30%">
 </h1>
+
+
 ### Installing
 You'll need a few flatpak dependencies to install
 ```bash
