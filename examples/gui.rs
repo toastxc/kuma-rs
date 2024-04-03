@@ -1,9 +1,11 @@
 use dotenv::dotenv;
 use eframe::{Frame, HardwareAcceleration, Renderer, Storage};
-use egui::{Context, FontId,  RichText, TextEdit, Ui, Widget};
+use egui::{Context, FontId, RichText, TextEdit, Ui, Widget};
 use kuma_rs::{DataHouse, HouseState, Kuma};
 use material_egui::MaterialColors;
 
+use egui_notify::Toasts;
+use notify_rust::get_server_information;
 use std::{
     sync::{Arc, RwLock},
     time::Duration,
@@ -23,8 +25,8 @@ fn main() {
             .with_min_inner_size([MIN_WIDTH, MIN_HEIGHT])
             .with_transparent(true),
         vsync: false,
-        hardware_acceleration: HardwareAcceleration::Preferred,
-        renderer: Renderer::Glow,
+        hardware_acceleration: HardwareAcceleration::Required,
+         renderer: Renderer::Glow,
         follow_system_theme: true,
         centered: false,
 
@@ -36,7 +38,6 @@ fn main() {
 
 pub type Guard<T> = Arc<RwLock<T>>;
 
-#[derive(Debug, Clone)]
 struct App {
     pub api: Kuma,
     pub runtime: Arc<Runtime>,
@@ -48,6 +49,7 @@ struct App {
     pub page: bool,
     pub past_state: HouseState,
     pub page_switchable: bool,
+    pub toasts: Toasts,
 }
 
 impl Default for App {
@@ -61,6 +63,7 @@ impl Default for App {
             past_state: HouseState::Online,
             page: false,
             page_switchable: true,
+            toasts: Toasts::new(),
         }
     }
 }
@@ -94,10 +97,13 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         if self.first_run_ctx {
-            if let Some((Some(url), Some(auth), Some(page))) = _frame
-                .storage()
-                .map(|a| (a.get_string("url"), a.get_string("auth"), a.get_string("page").map(|a|a.parse::<bool>().unwrap())))
-            {
+            if let Some((Some(url), Some(auth), Some(page))) = _frame.storage().map(|a| {
+                (
+                    a.get_string("url"),
+                    a.get_string("auth"),
+                    a.get_string("page").map(|a| a.parse::<bool>().unwrap()),
+                )
+            }) {
                 self.page = page;
                 self.api.url = url;
                 self.api.auth = auth;
@@ -118,22 +124,16 @@ impl eframe::App for App {
 }
 
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
-
-    // temporary
-    if ui.button("Notification!!!").clicked() {
-        notify("if you're seeing this, notifications are working!");
-    }
-
-
+    value.toasts.show(ctx);
     ui.add_enabled_ui(value.page_switchable, |ui| {
         let str = match value.page.clone() {
-            true => "Login",
-            false => "Logout",
+            false => "Login",
+            true => "Logout",
         };
-
         ui.checkbox(&mut value.page, str);
     });
 
+    ui.add_space(10.);
     let mut res_url = None;
     let mut res_auth = None;
 
@@ -175,11 +175,16 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
     };
 
     if value.first_run_gui {
+        if let Err(error) = get_server_information() {
+            value
+                .toasts
+                .warning("DBus error")
+                .set_duration(Duration::from_secs(5).into());
+            println!("{:?}", error);
+        }
         value.request(ctx.clone());
-    };
-    if value.first_run_gui {
         value.first_run_gui = false;
-    }
+    };
 
     let Ok(data) = value.data.read() else { return };
     let data = match data.is_some() {
@@ -231,10 +236,11 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
 
 pub fn notify(sum: impl Into<String>) {
     use notify_rust::Notification;
-    if let Err(error) =  Notification::new()
+    if let Err(error) = Notification::new()
         .appname("Kuma Desktop")
         .summary(&sum.into())
-        .show() {
+        .show()
+    {
         println!("{}", error);
     }
 }
