@@ -224,8 +224,10 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
 
 pub fn notify(sum: impl Into<String>) {
     use notify_rust::Notification;
-    let _ = Notification::new()
+    if let Err(error) =  Notification::new()
         .appname("Kuma Desktop")
         .summary(&sum.into())
-        .show();
+        .show() {
+        println!("{}", error);
+    }
 }
