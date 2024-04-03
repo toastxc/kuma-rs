@@ -130,11 +130,15 @@ impl eframe::App for App {
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
     value.toasts.write().unwrap().show(ctx);
     ui.add_enabled_ui(value.page_switchable, |ui| {
-        let str = match value.page {
-            false => "Login",
-            true => "Logout",
-        };
-        ui.checkbox(&mut value.page, str);
+        if ui
+            .button(match value.page {
+                false => "Login",
+                true => "Logout",
+            })
+            .clicked()
+        {
+            value.page = !value.page;
+        }
     });
 
     ui.add_space(10.);
