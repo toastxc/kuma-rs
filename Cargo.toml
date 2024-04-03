@@ -1,6 +1,6 @@
 [package]
 name = "kuma-rs"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A simple and easy library for interacting with Uptime Kuma"
 license = "GPL-3.0-only"
@@ -11,7 +11,23 @@ license = "GPL-3.0-only"
 [dependencies]
 reqwest = "0.12.1"
 anyhow = "1.0.81"
+env_logger = "0.11.3"
 
 [dev-dependencies]
 dotenv = "0.15.0"
 tokio = { version = "1.36.0", features = ["full"] }
+egui = { version = "0.27.0", features = ["persistence"] }
+material-egui = "0.1.5"
+eframe = { version = "0.27.0", features = ["persistence"] }
+notify-rust = { version = "4.10.0", features = ["zbus"]}
+gio = "0.19.3"
+
+[[examples]]
+name="demo"
+path="examples/demo.rs"
+
+[[examples]]
+name="gui"
+path="examples/gui.rs"
+
+

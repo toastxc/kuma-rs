@@ -1,9 +1,12 @@
+# Rust
 /target
-.env
+Cargo.lock
+# flatpak
 *.png
 icons
 *.desktop
 *.yaml
 .flatpak-builder/
 build-dir
-
+# env
+.env

@@ -1,0 +1,14 @@
+app_id="xyz.toastxc.Kuma"
+app_name="Kuma"
+profile="release"
+bin="gui"
+permissions = [
+    "--share=network",
+    "--socket=x11",
+    "--device=dri"
+]
+
+[desktopfile]
+terminal= false
+
+

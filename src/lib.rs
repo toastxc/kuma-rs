@@ -1,10 +1,13 @@
+use crate::HouseState::Online;
 use std::collections::HashMap;
+use std::fmt::Display;
+
 pub type Result<T> = core::result::Result<T, anyhow::Error>;
 
 #[derive(Debug, Clone)]
 pub struct Kuma {
-    url: String,
-    auth: String,
+    pub url: String,
+    pub auth: String,
 }
 
 impl Kuma {
@@ -124,7 +127,7 @@ impl DataHouse {
         }
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum HouseState {
     // No services can be reached, fully offline
     Offline,
@@ -133,10 +136,40 @@ pub enum HouseState {
     // fully online
     Online, // Something went wrong with collecting data
 }
+impl Display for HouseState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            HouseState::Offline => "Offline",
+            HouseState::Degraded(_) => "Degraded",
+            Online => "Online",
+        }
+            .to_string();
+        write!(f, "{}", str)
+    }
+}
+impl HouseState {
+    pub fn is_degraded(&self) -> Option<usize> {
+        match self {
+            HouseState::Offline |
+            HouseState::Online => None,
+            HouseState::Degraded(a) => Some(*a),
+
+        }
+    }
+}
 #[derive(Debug, Clone)]
 pub enum MonitorType {
     Http,
     Other,
+}
+impl ToString for MonitorType {
+    fn to_string(&self) -> String {
+        match self {
+            MonitorType::Http => "HTTP/HTTPS",
+            MonitorType::Other => "Other",
+        }
+        .to_string()
+    }
 }
 impl MonitorType {
     fn from_str(i: impl Into<String>) -> Self {
@@ -150,6 +183,15 @@ impl MonitorType {
 pub enum Status {
     Online,
     Offline,
+}
+impl ToString for Status {
+    fn to_string(&self) -> String {
+        match self {
+            Status::Online => "Online",
+            Status::Offline => "Offline",
+        }
+        .to_string()
+    }
 }
 impl Status {
     fn from_str(i: impl Into<String>) -> Option<Self> {
