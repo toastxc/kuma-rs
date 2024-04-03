@@ -3,9 +3,16 @@ app_name="Kuma"
 profile="release"
 bin="gui"
 permissions = [
+    # network
     "--share=network",
+    # display
     "--socket=x11",
-    "--device=dri"
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    # OpenGL
+    "--device=dri",
+    # notifications
+    "--socket=session-bus",
 ]
 
 [desktopfile]
