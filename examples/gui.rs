@@ -118,6 +118,13 @@ impl eframe::App for App {
 }
 
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
+
+    // temporary
+    if ui.button("Notification!!!").clicked() {
+        notify("if you're seeing this, notifications are working!");
+    }
+
+
     ui.add_enabled_ui(value.page_switchable, |ui| {
         let str = match value.page.clone() {
             true => "Login",
