@@ -1,4 +1,3 @@
-use crate::HouseState::Online;
 use std::collections::HashMap;
 use std::fmt::Display;
 
@@ -105,21 +104,17 @@ impl DataHouse {
             map.insert(x.monitor_name.clone(), x);
         }
 
-        let offline_count = map
-            .values()
-            .filter(|a| a.status == Status::Offline)
-            .collect::<Vec<&Data>>()
-            .len();
-        let online_count = map
-            .values()
-            .filter(|a| a.status == Status::Offline)
-            .collect::<Vec<&Data>>()
-            .len();
-
+        let (offline_count, online_count) = map.values().fold((0, 0), |(mut of, mut on), b| {
+            match b.status {
+                Status::Online => on += 1,
+                Status::Offline => of += 1,
+            };
+            (of, on)
+        });
         Self {
             entries: map,
             state: match (offline_count, online_count) {
-                (0, 0) => HouseState::Online,
+                (0, 0) => HouseState::Offline,
                 (0, _) => HouseState::Online,
                 (_, 0) => HouseState::Offline,
                 (a, _) => HouseState::Degraded(a),
@@ -141,7 +136,7 @@ impl Display for HouseState {
         let str = match self {
             HouseState::Offline => "Offline",
             HouseState::Degraded(_) => "Degraded",
-            Online => "Online",
+            HouseState::Online => "Online",
         }
         .to_string();
         write!(f, "{}", str)
@@ -160,13 +155,14 @@ pub enum MonitorType {
     Http,
     Other,
 }
-impl ToString for MonitorType {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for MonitorType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             MonitorType::Http => "HTTP/HTTPS",
             MonitorType::Other => "Other",
         }
-        .to_string()
+        .to_string();
+        write!(f, "{}", str)
     }
 }
 impl MonitorType {

@@ -117,13 +117,13 @@ impl eframe::App for App {
         MaterialColors::new("#F0F".to_string(), true, 1.5).apply_zoom(ctx, &mut self.first_run_ctx);
         egui::CentralPanel::default().show(ctx, |ui| update_fn(self, ui, ctx));
     }
-    fn persist_egui_memory(&self) -> bool {
-        true
-    }
     fn save(&mut self, _storage: &mut dyn Storage) {
         _storage.set_string("url", self.api.url.clone());
         _storage.set_string("auth", self.api.auth.clone());
         _storage.set_string("page", self.page.to_string());
+    }
+    fn persist_egui_memory(&self) -> bool {
+        true
     }
 }
 
@@ -220,15 +220,12 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
     // display
     if let Some(_service_list) = data.state.is_degraded() {
         let services = data.offline_services();
-        let mut services: Vec<(String, Data)> = services
-            .into_iter()
-            .map(|(key, value)| (key, value))
-            .collect();
+        let mut services: Vec<(String, Data)> = services.into_iter().collect();
         services.sort();
 
         for (name, service) in services {
             ui.collapsing(name, |ui| {
-                ui.label(format!("Type: {}", service.monitor_type.to_string()));
+                ui.label(format!("Type: {}", service.monitor_type));
                 ui.label(format!("URL: {}", service.monitor_url));
             });
         }
@@ -239,7 +236,7 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
         match data.state {
             HouseState::Online => notify("All services back online"),
             HouseState::Degraded(number) => notify(format!("{number} services offline")),
-            HouseState::Offline => notify("All services degraded"),
+            HouseState::Offline => notify("All services Offline"),
         }
         value.past_state = data.state
     }
