@@ -2,7 +2,7 @@ use dotenv::dotenv;
 use eframe::{Frame, HardwareAcceleration, Renderer, Storage};
 use egui::{Context, FontId, RichText, TextEdit, Ui, Widget};
 use egui_notify::Toasts;
-use kuma_rs::{DataHouse, HouseState, Kuma};
+use kuma_rs::{Data, DataHouse, HouseState, Kuma};
 use material_egui::MaterialColors;
 use notify_rust::get_server_information;
 use std::{
@@ -220,6 +220,12 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
     // display
     if let Some(_service_list) = data.state.is_degraded() {
         let services = data.offline_services();
+        let mut services: Vec<(String, Data)> = services
+            .into_iter()
+            .map(|(key, value)| (key, value))
+            .collect();
+        services.sort();
+
         for (name, service) in services {
             ui.collapsing(name, |ui| {
                 ui.label(format!("Type: {}", service.monitor_type.to_string()));

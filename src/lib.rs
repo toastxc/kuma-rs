@@ -78,7 +78,7 @@ impl Kuma {
         Ok(DataHouse::from_vec(data))
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, PartialEq, Eq)]
 pub struct Data {
     pub monitor_name: String,
     pub monitor_type: MonitorType,
@@ -155,7 +155,7 @@ impl HouseState {
         }
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, PartialEq, Eq)]
 pub enum MonitorType {
     Http,
     Other,
@@ -177,18 +177,19 @@ impl MonitorType {
         }
     }
 }
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
+#[derive(Debug, Clone, Ord, PartialOrd, PartialEq, Eq)]
 pub enum Status {
     Online,
     Offline,
 }
-impl ToString for Status {
-    fn to_string(&self) -> String {
-        match self {
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
             Status::Online => "Online",
             Status::Offline => "Offline",
         }
-        .to_string()
+        .to_string();
+        write!(f, "{}", str)
     }
 }
 impl Status {

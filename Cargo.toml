@@ -18,10 +18,9 @@ dotenv = "0.15.0"
 tokio = { version = "1.36.0", features = ["full"] }
 egui = { version = "0.27.0", features = [ "persistence",  ] }
 
-material-egui = "0.1.5"
-eframe = { version = "0.27.0", features = ["persistence", "wayland"] }
+material-egui = "0.1.6"
+eframe = { version = "0.27.0", features = ["persistence", "wayland", "x11"] }
 notify-rust = { version = "4.10.0", features = ["env_logger"]}
-gio = "0.19.3"
 egui-notify = "0.14.0"
 [[examples]]
 name="demo"
