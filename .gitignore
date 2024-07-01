@@ -1,6 +1,5 @@
 /target
 Cargo.lock
-icons
 .flatpak-builder/
 build-dir
 .env
