@@ -1,0 +1,33 @@
+id: xyz.toastxc.Kuma
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: gui
+finish-args:
+- --socket=fallback-x11
+- --socket=wayland
+- --device=dri
+- --socket=session-bus
+- --share=network
+modules:
+- name: app
+  buildsystem: simple
+  build-commands:
+  - install -D gui /app/bin/gui
+  sources:
+  - type: file
+    path: ./target/release/gui
+- name: icon
+  buildsystem: simple
+  build-commands:
+  - install -D gui-128.png /app/share/icons/hicolor/128x128/apps/xyz.toastxc.Kuma.png
+  sources:
+  - type: file
+    path: ./icons/gui-128.png
+- name: desktop
+  buildsystem: simple
+  build-commands:
+  - install -D xyz.toastxc.Kuma.desktop /app/share/applications/xyz.toastxc.Kuma.desktop
+  sources:
+  - type: file
+    path: xyz.toastxc.Kuma.desktop

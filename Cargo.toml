@@ -9,19 +9,18 @@ license = "GPL-3.0-only"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = "0.12.1"
-anyhow = "1.0.81"
-env_logger = "0.11.3"
+reqwest = "0.12.5"
+anyhow = "1.0.86"
 
 [dev-dependencies]
 dotenv = "0.15.0"
-tokio = { version = "1.36.0", features = ["full"] }
-egui = { version = "0.27.0", features = [ "persistence",  ] }
-
-material-egui = "0.1.6"
-eframe = { version = "0.27.0", features = ["persistence", "wayland", "x11"] }
-notify-rust = { version = "4.10.0", features = ["env_logger"]}
+tokio = { version = "1.38.0", features = ["full"] }
+egui = { version = "0.27.2", features = [ "persistence",  ] }
+material-egui = "0.1.7"
+eframe = { version = "0.27.2", features = ["persistence", "wayland"] }
+notify-rust = { version = "4.11.0", features = ["env_logger"]}
 egui-notify = "0.14.0"
+
 [[examples]]
 name="demo"
 path="examples/demo.rs"

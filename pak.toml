@@ -6,10 +6,9 @@ permissions = [
     # network
     "--share=network",
     # display
-    "--socket=x11",
     "--socket=wayland",
     "--socket=fallback-x11",
-    # OpenGL
+    # OpenGL: needed for EGUI
     "--device=dri",
     # notifications
     "--socket=session-bus",

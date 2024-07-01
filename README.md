@@ -11,7 +11,7 @@ There is no binary of CLI yet but you can use the library, all you need is a few
 # the key will look something like this
 # do NOT include a ':' at the start, it is not needed
 # don't share your key with anyone
-KEY="OFND4SB6IFBD8S9FDFO9JDS4FF2DS7ydhsuifdsdfd"
+KEY="EXAMPLEKEY"
 # the URI should NOT include HTTP/HTTPS
 # HTTP support is not currently included
 URI="kuma.instance/metrics"
@@ -36,14 +36,17 @@ async fn main() {
 
 
 ### Installing
-You'll need a few flatpak dependencies to install
 ```bash
-# clone the repository
 git clone https://github.com/toastxc/kuma-rs.git
-# cargo-pak manages flatpaks for rust apps, its safe dw
-cargo install cargo-pak
 cd kuma-rs/
-# this uses cargo-pak
-sh install.sh
-flatpak run xyz.toastxc.Kuma
+rustup update
+cargo b -r --example gui
+cp ./target/release/examples/gui ./target/release/
+flatpak-builder --install --force-clean build-dir xyz.toastxc.Kuma.yaml
+```
+
+## Library
+### Installing 
+```bash
+cargo add kuma-rs
 ```

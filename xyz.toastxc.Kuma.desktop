@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Version=1.1
+Name=Kuma
+Terminal=false
+Icon=xyz.toastxc.Kuma
+Exec=gui
