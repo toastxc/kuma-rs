@@ -42,7 +42,11 @@ cd kuma-rs/
 rustup update
 cargo b -r --example gui
 cp ./target/release/examples/gui ./target/release/
-flatpak-builder --install --force-clean build-dir xyz.toastxc.Kuma.yaml
+sudo flatpak-builder --install --force-clean build-dir xyz.toastxc.Kuma.yaml
+```
+### Running
+```bash
+cargo r --example gui
 ```
 
 ## Library
