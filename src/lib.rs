@@ -11,9 +11,17 @@ pub struct Kuma {
 
 impl Kuma {
     pub fn new(url: impl Into<String>, auth: impl Into<String>) -> Self {
+        let mut url = url.into();
+
+        if url.contains("https://") {
+            (0..8).for_each(|_| {
+                url.remove(0);
+            });
+        };
+
         Self {
-            url: url.into(),
-            auth: auth.into(),
+            url,
+            auth: format!("https://:{}", auth.into()),
         }
     }
 
@@ -29,7 +37,9 @@ impl Kuma {
     }
     // gets the status based on authentication and uri
     pub async fn get(&self) -> Result<DataHouse> {
-        let data: Vec<Data> = reqwest::get(format!("https://:{}@{}", self.auth, self.url))
+        let uri = format!("{}@{}", self.auth, self.url);
+        println!("URI: {uri}");
+        let data: Vec<Data> = reqwest::get(uri)
             .await?
             .text()
             .await?
