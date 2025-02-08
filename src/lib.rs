@@ -3,26 +3,28 @@ use std::fmt::Display;
 
 pub type Result<T> = core::result::Result<T, anyhow::Error>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Kuma {
     pub url: String,
     pub auth: String,
 }
 
 impl Kuma {
-    pub fn new(url: impl Into<String>, auth: impl Into<String>) -> Self {
-        let mut url = url.into();
+    pub fn new() -> Self {
+        Default::default()
+    }
+    fn uri_comp(&self) -> String {
+        let url = &self.url;
+        let auth = &self.auth;
 
-        if url.contains("https://") {
-            (0..8).for_each(|_| {
-                url.remove(0);
-            });
+        let remove = match (url.contains("https://"), url.contains("http://")) {
+            (true, _) => 8,
+            (_, true) => 7,
+            _ => 0,
         };
 
-        Self {
-            url,
-            auth: format!("https://:{}", auth.into()),
-        }
+        let (base, url) = url.split_at(remove);
+        format!("{base}:{auth}@{url}")
     }
 
     // infallible: returns offline if server cannot be reached
@@ -37,9 +39,10 @@ impl Kuma {
     }
     // gets the status based on authentication and uri
     pub async fn get(&self) -> Result<DataHouse> {
-        let uri = format!("{}@{}", self.auth, self.url);
-        println!("URI: {uri}");
-        let data: Vec<Data> = reqwest::get(uri)
+        //let uri = format!(":{}@{}", self.auth, self.url);
+
+        println!("URI: {}", self.uri_comp());
+        let data: Vec<Data> = reqwest::get(self.uri_comp())
             .await?
             .text()
             .await?
