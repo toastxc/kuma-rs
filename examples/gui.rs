@@ -1,4 +1,3 @@
-#![feature(mpmc_channel)]
 use dotenv::dotenv;
 use eframe::{Frame, HardwareAcceleration, Renderer, Storage};
 use egui::{Context, FontId, RichText, TextEdit, Ui, Widget};
@@ -6,7 +5,7 @@ use egui_notify::Toasts;
 use kuma_rs::{Data, DataHouse, HouseState, Kuma};
 use material_egui::MaterialColors;
 use notify_rust::get_server_information;
-use std::sync::mpmc::{self, Receiver, Sender};
+use crossbeam_channel::{self, Receiver, Sender};
 use std::{sync::LazyLock, time::Duration};
 use tokio::runtime::Runtime;
 static MIN_WIDTH: f32 = 300.0;
@@ -111,8 +110,8 @@ impl eframe::App for App {
     }
 }
 
-static API: LazyChannel<Kuma> = LazyLock::new(mpmc::channel);
-static RES: LazyChannel<Result<DataHouse>> = LazyLock::new(mpmc::channel);
+static API: LazyChannel<Kuma> = LazyLock::new(crossbeam_channel::unbounded);
+static RES: LazyChannel<Result<DataHouse>> = LazyLock::new(crossbeam_channel::unbounded);
 type LazyChannel<T> = LazyLock<(Sender<T>, Receiver<T>), fn() -> (Sender<T>, Receiver<T>)>;
 
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
