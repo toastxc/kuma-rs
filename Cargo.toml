@@ -22,6 +22,7 @@ eframe = { version = "0.27.2", features = ["persistence", "wayland"] }
 notify-rust = {version="4.11.3",  features=["env_logger", "d"], default-features = false}
 # needed for toasts
 egui-notify = "0.14.0"
+crossbeam-channel = "*"
 
 [[examples]]
 name="demo"
