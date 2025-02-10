@@ -1,4 +1,4 @@
-use crossbeam_channel::{self, unbounded, Receiver, Sender};
+#![feature(mpmc_channel)]
 use dotenv::dotenv;
 use eframe::{Frame, HardwareAcceleration, Renderer, Storage};
 use egui::{Context, FontId, RichText, TextEdit, Ui, Widget};
@@ -6,6 +6,7 @@ use egui_notify::Toasts;
 use kuma_rs::{Data, DataHouse, HouseState, Kuma};
 use material_egui::MaterialColors;
 use notify_rust::get_server_information;
+use std::sync::mpmc::{self, Receiver, Sender};
 use std::{sync::LazyLock, time::Duration};
 use tokio::runtime::Runtime;
 static MIN_WIDTH: f32 = 300.0;
@@ -110,27 +111,26 @@ impl eframe::App for App {
     }
 }
 
-static API: LazyChannel<Kuma> = LazyLock::new(unbounded);
-static RES: LazyChannel<Result<DataHouse>> = LazyLock::new(unbounded);
+static API: LazyChannel<Kuma> = LazyLock::new(mpmc::channel);
+static RES: LazyChannel<Result<DataHouse>> = LazyLock::new(mpmc::channel);
 type LazyChannel<T> = LazyLock<(Sender<T>, Receiver<T>), fn() -> (Sender<T>, Receiver<T>)>;
 
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
     if value.first_run_gui {
         value.first_run_gui = false;
-        API.0.send(value.api.clone()).unwrap();
+        println!("Running update first time");
         value.request_loop(API.1.clone(), RES.0.clone());
-        if let Ok(result) = RES.1.try_recv() {
-            value.data = Some(result);
-        };
     }
+
+    API.0.send(value.api.clone()).unwrap();
+    if let Ok(result) = RES.1.try_recv() {
+        value.data = Some(result);
+    };
 
     value.toasts.show(ctx);
     ui.add_enabled_ui(value.page_switchable, |ui| {
         if ui
-            .button(match value.page {
-                false => "Login",
-                true => "Logout",
-            })
+            .button(if value.page { "Login" } else { "Logout" })
             .clicked()
         {
             if let Some(Err(error)) = &value.data {
