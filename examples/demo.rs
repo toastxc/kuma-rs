@@ -6,10 +6,13 @@ use std::env;
 #[tokio::main]
 async fn main() {
     let _ = dotenv();
-    let data = Kuma::new(env::var("URI").unwrap(), env::var("KEY").unwrap())
-        .get()
-        .await
-        .unwrap();
+    let data = Kuma {
+        url: env::var("URI").unwrap(),
+        auth: env::var("KEY").unwrap(),
+    }
+    .get()
+    .await
+    .unwrap();
 
     println!("polling data...");
     println!("Status: {:?}", data.state);
