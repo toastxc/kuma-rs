@@ -54,7 +54,7 @@ struct App {
 impl Default for App {
     fn default() -> Self {
         Self {
-            api: Kuma::new("", ""),
+            api: Kuma::new(),
             runtime: Arc::new(Runtime::new().unwrap()),
             data: Arc::new(RwLock::new(None)),
             first_run_ctx: true,
