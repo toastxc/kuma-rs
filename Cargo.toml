@@ -20,9 +20,10 @@ material-egui = "0.1.7"
 eframe = { version = "0.27.2", features = ["persistence", "wayland"] }
 #notify-rust = { version = "4.11.0", features = ["env_logger"]}
 notify-rust = {version="4.11.3",  features=["env_logger", "d"], default-features = false}
-# needed for toasts
+# needed for Toasts
 egui-notify = "0.14.0"
 crossbeam-channel = "*"
+run_once="0.1.2"
 
 [[examples]]
 name="demo"

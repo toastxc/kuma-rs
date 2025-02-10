@@ -1,3 +1,4 @@
+use crossbeam_channel::{self, Receiver, Sender};
 use dotenv::dotenv;
 use eframe::{Frame, HardwareAcceleration, Renderer, Storage};
 use egui::{Context, FontId, RichText, TextEdit, Ui, Widget};
@@ -5,7 +6,6 @@ use egui_notify::Toasts;
 use kuma_rs::{Data, DataHouse, HouseState, Kuma};
 use material_egui::MaterialColors;
 use notify_rust::get_server_information;
-use crossbeam_channel::{self, Receiver, Sender};
 use std::{sync::LazyLock, time::Duration};
 use tokio::runtime::Runtime;
 static MIN_WIDTH: f32 = 300.0;
@@ -33,17 +33,16 @@ fn main() {
 }
 
 type Result<T> = core::result::Result<T, anyhow::Error>;
-
+use run_once::RunOnce;
 struct App {
     pub api: Kuma,
     pub runtime: Runtime,
     pub data: Option<Result<DataHouse>>,
-    pub first_run_ctx: bool,
-    pub first_run_gui: bool,
     pub page: bool,
     pub past_state: HouseState,
     pub page_switchable: bool,
     pub toasts: Toasts,
+    pub r: RunOnce,
 }
 
 impl App {
@@ -52,19 +51,18 @@ impl App {
             api: Kuma::new(),
             runtime: Runtime::new().expect("Tokio Not Supported for Platform"),
             data: None,
-            first_run_ctx: true,
-            first_run_gui: true,
             past_state: HouseState::Online,
             page: false,
             page_switchable: true,
             toasts: Toasts::new(),
+            r: RunOnce::default(),
         }
     }
 }
 
 impl App {
     fn request_loop(&self, api: Receiver<Kuma>, data: Sender<Result<DataHouse>>) {
-        let clock = 1;
+        let clock = 10;
 
         self.runtime.spawn(async move {
             loop {
@@ -83,7 +81,7 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        if self.first_run_ctx {
+        self.r.run_once(1, || {
             if let Some((Some(url), Some(auth), Some(page))) = _frame.storage().map(|a| {
                 (
                     a.get_string("url"),
@@ -95,9 +93,11 @@ impl eframe::App for App {
                 self.api.url = url;
                 self.api.auth = auth;
             };
-            self.first_run_ctx = false;
-        };
-        MaterialColors::new("#642".to_string(), true, 1.5).apply_zoom(ctx, &mut self.first_run_ctx);
+        });
+
+        let mut zoom = self.r.run_once_if(3);
+
+        MaterialColors::new("#642".to_string(), true, 1.5).apply_zoom(ctx, &mut zoom);
         egui::CentralPanel::default().show(ctx, |ui| update_fn(self, ui, ctx));
     }
     fn save(&mut self, _storage: &mut dyn Storage) {
@@ -115,9 +115,7 @@ static RES: LazyChannel<Result<DataHouse>> = LazyLock::new(crossbeam_channel::un
 type LazyChannel<T> = LazyLock<(Sender<T>, Receiver<T>), fn() -> (Sender<T>, Receiver<T>)>;
 
 fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
-    if value.first_run_gui {
-        value.first_run_gui = false;
-        println!("Running update first time");
+    if value.r.run_once_if(2) {
         value.request_loop(API.1.clone(), RES.0.clone());
     }
 
@@ -186,7 +184,7 @@ fn page_login(value: &mut App, ui: &mut Ui) {
 }
 
 fn page_dash(value: &mut App, ui: &mut Ui) {
-    if value.first_run_gui {
+    value.r.run_once(4, || {
         if let Err(error) = get_server_information() {
             value
                 .toasts
@@ -194,8 +192,7 @@ fn page_dash(value: &mut App, ui: &mut Ui) {
                 .set_duration(Duration::from_secs(5).into());
             println!("{:?}", error);
         }
-        value.first_run_gui = false;
-    };
+    });
 
     let Some(Ok(data)) = &value.data else {
         ui.label("No Data Available :/");
