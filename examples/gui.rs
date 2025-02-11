@@ -67,12 +67,13 @@ impl App {
         self.runtime.spawn(async move {
             loop {
                 if let Ok(api) = api.try_recv() {
-                    println!("aaaaaaa");
+                    println!("recived: {}", api.auth);
                     let temp = data.send(api.get().await);
                     temp.unwrap_or_else(|a| panic!("{}", a));
                     println!("a");
-                };
-                println!("loop doing nothing");
+                } else {
+                    println!("failed to recv");
+                }
                 tokio::time::sleep(Duration::from_secs(clock)).await;
             }
         });
@@ -97,7 +98,7 @@ impl eframe::App for App {
 
         let mut zoom = self.r.run_once_if(3);
 
-        MaterialColors::new("#642".to_string(), true, 1.5).apply_zoom(ctx, &mut zoom);
+        MaterialColors::new("#435".to_string(), true, 1.5).apply_zoom(ctx, &mut zoom);
         egui::CentralPanel::default().show(ctx, |ui| update_fn(self, ui, ctx));
     }
     fn save(&mut self, _storage: &mut dyn Storage) {
@@ -119,7 +120,6 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
         value.request_loop(API.1.clone(), RES.0.clone());
     }
 
-    API.0.send(value.api.clone()).unwrap();
     if let Ok(result) = RES.1.try_recv() {
         value.data = Some(result);
     };
@@ -130,6 +130,8 @@ fn update_fn(value: &mut App, ui: &mut Ui, ctx: &Context) {
             .button(if value.page { "Login" } else { "Logout" })
             .clicked()
         {
+            API.0.send(value.api.clone()).unwrap();
+
             if let Some(Err(error)) = &value.data {
                 value.page = true;
                 value.toasts.error(error.to_string());
